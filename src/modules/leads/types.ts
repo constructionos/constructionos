@@ -22,13 +22,13 @@ export type BudgetRange = (typeof budgetRanges)[number];
 export type DesiredTimeline = (typeof desiredTimelines)[number];
 
 export const leadStatusLabels: Record<LeadStatus, string> = {
-  budget_preparing: "Presupuesto en preparacion",
+  budget_preparing: "Preparando presupuesto",
   budget_sent: "Presupuesto enviado",
   discarded: "Descartado",
   lost: "Perdido",
-  negotiation: "Negociacion",
+  negotiation: "En negociacion",
   new: "Nuevo",
-  pending_call: "Llamada pendiente",
+  pending_call: "Pendiente de llamar",
   visit_done: "Visita realizada",
   visit_pending: "Visita pendiente",
   won: "Ganado",
@@ -56,6 +56,12 @@ export const desiredTimelineLabels: Record<DesiredTimeline, string> = {
   asap: "Lo antes posible",
   more_than_6_months: "Mas de 6 meses",
   unknown: "Por definir",
+};
+
+export const leadPriorityLabels: Record<LeadPriority, string> = {
+  high: "Alta",
+  low: "Baja",
+  medium: "Media",
 };
 
 export type Lead = {

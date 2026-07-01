@@ -158,7 +158,9 @@ export async function getLeadStats() {
     budgetSent: byStatus.budget_sent,
     newLeads: byStatus.new,
     openLeads: leads.filter((lead) => !closedLeadStatuses.has(lead.status)).length,
+    pendingFollowUp: byStatus.pending_call + byStatus.visit_pending,
     pipelineValue,
     totalLeads: leads.length,
+    wonLeads: byStatus.won,
   };
 }

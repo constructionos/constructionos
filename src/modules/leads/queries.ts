@@ -1,5 +1,6 @@
 import { leadStatuses, type Lead, type LeadStatus } from "./types";
 
+// Dashboard lead reads intentionally stay on demo data until auth protects PII.
 const demoLeads: Lead[] = [
   {
     budget_range: "150k_300k",

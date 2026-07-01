@@ -6,6 +6,7 @@ import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { budgetRangeLabels, desiredTimelineLabels } from "../types";
 import { createLeadAction, type LeadActionState } from "../actions";
 
 const initialState: LeadActionState = {
@@ -48,6 +49,19 @@ export function LeadCaptureForm() {
         <FieldError messages={state.fieldErrors?.title} />
       </div>
       <div className="space-y-1.5">
+        <label className="text-sm font-medium" htmlFor="description">
+          Descripcion
+        </label>
+        <textarea
+          className="min-h-24 w-full rounded-md border border-border bg-white px-3 py-2 text-sm outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
+          id="description"
+          maxLength={2000}
+          name="description"
+          placeholder="Cuentanos alcance, tipo de obra, ubicacion o necesidades principales."
+        />
+        <FieldError messages={state.fieldErrors?.description} />
+      </div>
+      <div className="space-y-1.5">
         <label className="text-sm font-medium" htmlFor="contact_name">
           Contacto
         </label>
@@ -60,6 +74,13 @@ export function LeadCaptureForm() {
         </label>
         <Input id="email" name="email" placeholder="contacto@empresa.com" type="email" />
         <FieldError messages={state.fieldErrors?.email} />
+      </div>
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium" htmlFor="phone">
+          Telefono
+        </label>
+        <Input id="phone" name="phone" placeholder="+34 600 000 000" type="tel" />
+        <FieldError messages={state.fieldErrors?.phone} />
       </div>
       <div className="space-y-1.5">
         <label className="text-sm font-medium" htmlFor="city">
@@ -80,6 +101,38 @@ export function LeadCaptureForm() {
           <option value="other">Otro servicio</option>
         </Select>
         <FieldError messages={state.fieldErrors?.service_type} />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium" htmlFor="budget_range">
+            Presupuesto estimado
+          </label>
+          <Select defaultValue="unknown" id="budget_range" name="budget_range">
+            <option value="unknown">{budgetRangeLabels.unknown}</option>
+            <option value="under_50k">{budgetRangeLabels.under_50k}</option>
+            <option value="50k_150k">{budgetRangeLabels["50k_150k"]}</option>
+            <option value="150k_300k">{budgetRangeLabels["150k_300k"]}</option>
+            <option value="over_300k">{budgetRangeLabels.over_300k}</option>
+          </Select>
+          <FieldError messages={state.fieldErrors?.budget_range} />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium" htmlFor="desired_timeline">
+            Plazo deseado
+          </label>
+          <Select defaultValue="unknown" id="desired_timeline" name="desired_timeline">
+            <option value="unknown">{desiredTimelineLabels.unknown}</option>
+            <option value="asap">{desiredTimelineLabels.asap}</option>
+            <option value="1_3_months">{desiredTimelineLabels["1_3_months"]}</option>
+            <option value="3_6_months">{desiredTimelineLabels["3_6_months"]}</option>
+            <option value="more_than_6_months">{desiredTimelineLabels.more_than_6_months}</option>
+          </Select>
+          <FieldError messages={state.fieldErrors?.desired_timeline} />
+        </div>
+      </div>
+      <div aria-hidden="true" className="hidden">
+        <label htmlFor="website">Web</label>
+        <Input autoComplete="off" id="website" name="website" tabIndex={-1} />
       </div>
       <SubmitButton />
       {state.message ? (

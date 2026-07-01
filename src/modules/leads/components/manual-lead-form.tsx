@@ -185,9 +185,18 @@ export function ManualLeadForm() {
       <section className="grid gap-4 md:grid-cols-[1fr_180px]">
         <div className="space-y-1.5">
           <label className="text-sm font-medium" htmlFor="next_action">
-            Proxima accion opcional
+            Siguiente tarea opcional
           </label>
-          <Input id="next_action" maxLength={180} name="next_action" placeholder="Responder WhatsApp, llamar, pedir fotos..." />
+          <p className="text-xs text-muted-foreground">Que hay que hacer ahora con este lead.</p>
+          <Input
+            id="next_action"
+            maxLength={180}
+            name="next_action"
+            placeholder="Llamar para concretar visita"
+          />
+          <p className="text-xs text-muted-foreground">
+            Ejemplos: pedir fotos o medidas, preparar presupuesto, hacer seguimiento del presupuesto.
+          </p>
           <FieldError messages={state.fieldErrors?.next_action} />
         </div>
         <div className="space-y-1.5">

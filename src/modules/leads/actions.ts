@@ -32,7 +32,7 @@ export type LeadActionState = {
 
 const leadWorkflowSchema = z.object({
   id: z.string().uuid("Lead no valido."),
-  next_action: z.string().trim().min(2, "Indica la proxima accion.").max(180, "La proxima accion es demasiado larga."),
+  next_action: z.string().trim().min(2, "Indica la siguiente tarea.").max(180, "La siguiente tarea es demasiado larga."),
   next_action_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Indica una fecha valida."),
   priority: z.enum(leadPriorities),
   status: z.enum(leadStatuses),

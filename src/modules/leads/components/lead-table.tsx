@@ -28,10 +28,10 @@ export function LeadTable({ leads }: { leads: Lead[] }) {
         <div className="grid grid-cols-[1.2fr_1fr_0.9fr_0.75fr_0.8fr_1.2fr_1fr_0.8fr_44px] border-b border-border bg-muted/70 px-4 py-3 text-xs font-semibold uppercase text-muted-foreground">
           <span>Oportunidad</span>
           <span>Contacto</span>
-          <span>Estado</span>
+          <span>Fase</span>
           <span>Origen</span>
           <span>Prioridad</span>
-          <span>Proxima accion</span>
+          <span>Tarea</span>
           <span>Tipo y ciudad</span>
           <span>Creado</span>
           <span />

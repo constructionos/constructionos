@@ -115,7 +115,8 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
         </Card>
 
         <Card className="p-5">
-          <h2 className="font-semibold">Proxima accion</h2>
+          <h2 className="font-semibold">Siguiente tarea</h2>
+          <p className="mt-2 text-sm text-muted-foreground">Que hay que hacer ahora con este lead.</p>
           <div className="mt-4 flex items-start gap-3 rounded-md bg-muted p-4">
             <CalendarDays aria-hidden="true" className="mt-0.5 text-primary" size={18} />
             <div>

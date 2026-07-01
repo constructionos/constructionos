@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { budgetRanges, desiredTimelines, leadServiceTypes } from "./types";
+import { budgetRanges, desiredTimelines, leadPriorities, leadServiceTypes, leadStatuses } from "./types";
 
 const leadCaptureSchema = z.object({
   budget_range: z.enum(budgetRanges),
@@ -25,6 +25,20 @@ const leadCaptureSchema = z.object({
 
 export type LeadActionState = {
   fieldErrors?: Partial<Record<keyof z.infer<typeof leadCaptureSchema>, string[]>>;
+  message?: string;
+  ok: boolean;
+};
+
+const leadWorkflowSchema = z.object({
+  id: z.string().uuid("Lead no valido."),
+  next_action: z.string().trim().min(2, "Indica la proxima accion.").max(180, "La proxima accion es demasiado larga."),
+  next_action_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Indica una fecha valida."),
+  priority: z.enum(leadPriorities),
+  status: z.enum(leadStatuses),
+});
+
+export type LeadWorkflowActionState = {
+  fieldErrors?: Partial<Record<keyof z.infer<typeof leadWorkflowSchema>, string[]>>;
   message?: string;
   ok: boolean;
 };
@@ -90,6 +104,77 @@ export async function createLeadAction(
 
   return {
     message: "Lead registrado para seguimiento comercial.",
+    ok: true,
+  };
+}
+
+export async function updateLeadWorkflowAction(
+  _previousState: LeadWorkflowActionState,
+  formData: FormData,
+): Promise<LeadWorkflowActionState> {
+  const parsed = leadWorkflowSchema.safeParse({
+    id: formData.get("id"),
+    next_action: formData.get("next_action"),
+    next_action_date: formData.get("next_action_date"),
+    priority: formData.get("priority"),
+    status: formData.get("status"),
+  });
+
+  if (!parsed.success) {
+    return {
+      fieldErrors: parsed.error.flatten().fieldErrors,
+      message: "Revisa los campos marcados.",
+      ok: false,
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      message: "Inicia sesion para actualizar el lead.",
+      ok: false,
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("leads")
+    .update({
+      next_action: parsed.data.next_action,
+      next_action_date: parsed.data.next_action_date,
+      priority: parsed.data.priority,
+      status: parsed.data.status,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", parsed.data.id)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("Failed to update lead workflow", error);
+
+    return {
+      message: "No hemos podido guardar los cambios.",
+      ok: false,
+    };
+  }
+
+  if (!data) {
+    return {
+      message: "No se ha encontrado el lead o no tienes acceso.",
+      ok: false,
+    };
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/leads");
+  revalidatePath(`/leads/${parsed.data.id}`);
+
+  return {
+    message: "Cambios guardados.",
     ok: true,
   };
 }

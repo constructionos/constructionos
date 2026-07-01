@@ -18,10 +18,13 @@ Apply migrations in order after review:
 1. `src/db/migrations/0001_initial_leads.sql`
 2. `src/db/migrations/0002_public_lead_capture.sql`
 3. `src/db/migrations/0003_authenticated_read_grants.sql`
+4. `src/db/migrations/0004_authenticated_lead_workflow_update_grants.sql`
 
 Do not apply migrations to production without reviewing the SQL and confirming the target project.
 
 Migration `0003` grants `select` to the `authenticated` role for dashboard reads. RLS policies remain the real tenant boundary; do not grant anonymous reads or direct anonymous writes.
+
+Migration `0004` grants column-level `update` to the `authenticated` role only for lead workflow fields: `status`, `priority`, `next_action`, `next_action_date`, and `updated_at`. RLS remains the real tenant boundary through company membership. Do not grant anonymous update permissions, and do not grant update permissions for PII, commercial intake fields, or `company_id`.
 
 ## Client Pattern
 

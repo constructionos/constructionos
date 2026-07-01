@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { ArrowUpRight, ClipboardList, Euro, TrendingUp, Users } from "lucide-react";
+import { ArrowUpRight, ClipboardList, PhoneCall, Send, Trophy, TrendingUp, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/utils/format";
 import { LeadStatusBadge } from "@/modules/leads/components/lead-status-badge";
 import { getLeads, getLeadStats } from "@/modules/leads/queries";
 import { leadStatusLabels, type LeadStatus } from "@/modules/leads/types";
@@ -28,7 +27,7 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-5">
         <Card className="p-5">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Leads totales</span>
@@ -38,17 +37,31 @@ export default async function DashboardPage() {
         </Card>
         <Card className="p-5">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Valor pipeline</span>
-            <Euro aria-hidden="true" className="text-primary" size={18} />
-          </div>
-          <p className="mt-4 text-3xl font-semibold">{formatCurrency(stats.pipelineValue)}</p>
-        </Card>
-        <Card className="p-5">
-          <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Leads nuevos</span>
             <TrendingUp aria-hidden="true" className="text-primary" size={18} />
           </div>
           <p className="mt-4 text-3xl font-semibold">{stats.newLeads}</p>
+        </Card>
+        <Card className="p-5">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Llamada o visita</span>
+            <PhoneCall aria-hidden="true" className="text-primary" size={18} />
+          </div>
+          <p className="mt-4 text-3xl font-semibold">{stats.pendingFollowUp}</p>
+        </Card>
+        <Card className="p-5">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Presupuestos</span>
+            <Send aria-hidden="true" className="text-primary" size={18} />
+          </div>
+          <p className="mt-4 text-3xl font-semibold">{stats.budgetSent}</p>
+        </Card>
+        <Card className="p-5">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Ganados</span>
+            <Trophy aria-hidden="true" className="text-primary" size={18} />
+          </div>
+          <p className="mt-4 text-3xl font-semibold">{stats.wonLeads}</p>
         </Card>
       </section>
 

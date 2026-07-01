@@ -17,8 +17,11 @@ Apply migrations in order after review:
 
 1. `src/db/migrations/0001_initial_leads.sql`
 2. `src/db/migrations/0002_public_lead_capture.sql`
+3. `src/db/migrations/0003_authenticated_read_grants.sql`
 
 Do not apply migrations to production without reviewing the SQL and confirming the target project.
+
+Migration `0003` grants `select` to the `authenticated` role for dashboard reads. RLS policies remain the real tenant boundary; do not grant anonymous reads or direct anonymous writes.
 
 ## Client Pattern
 

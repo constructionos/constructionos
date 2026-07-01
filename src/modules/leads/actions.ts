@@ -1,9 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { budgetRanges, desiredTimelines, leadPriorities, leadServiceTypes, leadStatuses } from "./types";
+import { budgetRanges, desiredTimelines, leadPriorities, leadServiceTypes, leadSources, leadStatuses } from "./types";
 
 const leadCaptureSchema = z.object({
   budget_range: z.enum(budgetRanges),
@@ -39,6 +40,75 @@ const leadWorkflowSchema = z.object({
 
 export type LeadWorkflowActionState = {
   fieldErrors?: Partial<Record<keyof z.infer<typeof leadWorkflowSchema>, string[]>>;
+  message?: string;
+  ok: boolean;
+};
+
+const optionalEmailSchema = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") {
+      return undefined;
+    }
+
+    const trimmed = value.trim();
+    return trimmed ? trimmed : undefined;
+  },
+  z.string().email("El email no tiene un formato valido.").optional(),
+);
+
+const optionalDateSchema = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") {
+      return undefined;
+    }
+
+    const trimmed = value.trim();
+    return trimmed ? trimmed : undefined;
+  },
+  z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Indica una fecha valida.").optional(),
+);
+
+const optionalTextSchema = (maxLength: number) =>
+  z.preprocess(
+    (value) => {
+      if (typeof value !== "string") {
+        return undefined;
+      }
+
+      const trimmed = value.trim();
+      return trimmed ? trimmed : undefined;
+    },
+    z.string().max(maxLength, "El texto es demasiado largo.").optional(),
+  );
+
+const manualLeadSchema = z.object({
+  budget_range: z.enum(budgetRanges),
+  city: z.string().trim().min(2, "Indica la ciudad.").max(120, "La ciudad es demasiado larga."),
+  contact_name: z.string().trim().min(2, "Indica una persona de contacto.").max(160, "El contacto es demasiado largo."),
+  description: z
+    .string()
+    .trim()
+    .min(5, "Resume la conversacion o necesidad.")
+    .max(2000, "La descripcion es demasiado larga."),
+  desired_timeline: z.enum(desiredTimelines),
+  email: optionalEmailSchema,
+  next_action: optionalTextSchema(180),
+  next_action_date: optionalDateSchema,
+  phone: z
+    .string()
+    .trim()
+    .min(6, "Indica un telefono de contacto.")
+    .max(40, "El telefono es demasiado largo.")
+    .regex(/^[0-9+(). -]+$/, "El telefono solo puede incluir numeros, espacios y simbolos basicos."),
+  priority: z.enum(leadPriorities),
+  province: optionalTextSchema(120),
+  service_type: z.enum(leadServiceTypes),
+  source: z.enum(leadSources),
+  title: z.string().trim().min(3, "Indica la oportunidad.").max(200, "El titulo es demasiado largo."),
+});
+
+export type ManualLeadActionState = {
+  fieldErrors?: Partial<Record<keyof z.infer<typeof manualLeadSchema>, string[]>>;
   message?: string;
   ok: boolean;
 };
@@ -177,4 +247,111 @@ export async function updateLeadWorkflowAction(
     message: "Cambios guardados.",
     ok: true,
   };
+}
+
+export async function createManualLeadAction(
+  _previousState: ManualLeadActionState,
+  formData: FormData,
+): Promise<ManualLeadActionState> {
+  const parsed = manualLeadSchema.safeParse({
+    budget_range: formData.get("budget_range"),
+    city: formData.get("city"),
+    contact_name: formData.get("contact_name"),
+    description: formData.get("description"),
+    desired_timeline: formData.get("desired_timeline"),
+    email: formData.get("email"),
+    next_action: formData.get("next_action"),
+    next_action_date: formData.get("next_action_date"),
+    phone: formData.get("phone"),
+    priority: formData.get("priority"),
+    province: formData.get("province"),
+    service_type: formData.get("service_type"),
+    source: formData.get("source"),
+    title: formData.get("title"),
+  });
+
+  if (!parsed.success) {
+    return {
+      fieldErrors: parsed.error.flatten().fieldErrors,
+      message: "Revisa los campos marcados.",
+      ok: false,
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      message: "Inicia sesion para crear leads.",
+      ok: false,
+    };
+  }
+
+  const { data: membership, error: membershipError } = await supabase
+    .from("memberships")
+    .select("company_id")
+    .eq("user_id", user.id)
+    // TODO: replace this with an explicit company switcher when multi-company UI exists.
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (membershipError) {
+    console.error("Failed to resolve lead company", membershipError);
+  }
+
+  if (!membership?.company_id) {
+    return {
+      message: "Tu usuario no esta asociado a ninguna empresa.",
+      ok: false,
+    };
+  }
+
+  const values = parsed.data;
+  const { data, error } = await supabase
+    .from("leads")
+    .insert({
+      budget_range: values.budget_range,
+      city: values.city,
+      company_id: membership.company_id,
+      contact_name: values.contact_name,
+      description: values.description,
+      desired_timeline: values.desired_timeline,
+      email: values.email ?? null,
+      estimated_budget: 0,
+      next_action: values.next_action ?? "Contactar lead",
+      next_action_date: values.next_action_date ?? null,
+      phone: values.phone,
+      priority: values.priority,
+      province: values.province ?? "Por definir",
+      service_type: values.service_type,
+      source: values.source,
+      status: "new",
+      title: values.title,
+    })
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("Failed to create manual lead", error);
+
+    return {
+      message: "No hemos podido crear el lead.",
+      ok: false,
+    };
+  }
+
+  if (!data?.id) {
+    return {
+      message: "No se ha podido confirmar el lead creado.",
+      ok: false,
+    };
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/leads");
+  redirect(`/leads/${data.id}`);
 }

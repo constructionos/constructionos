@@ -53,7 +53,7 @@ export function LeadTable({ leads }: { leads: Lead[] }) {
             </div>
             <div>
               <p>{lead.contact_name}</p>
-              <p className="text-muted-foreground">{lead.email}</p>
+              <p className="text-muted-foreground">{lead.email || "Sin email"}</p>
             </div>
             <LeadStatusBadge status={lead.status} />
             <Badge tone={sourceTones[lead.source]}>{leadSourceLabels[lead.source]}</Badge>

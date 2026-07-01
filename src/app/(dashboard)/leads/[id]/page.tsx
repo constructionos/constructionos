@@ -72,7 +72,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             <p className="font-medium">{lead.contact_name}</p>
             <p className="flex items-center gap-3">
               <Mail aria-hidden="true" className="text-primary" size={17} />
-              {lead.email}
+              {lead.email || "Sin email"}
             </p>
             <p className="flex items-center gap-3">
               <Phone aria-hidden="true" className="text-primary" size={17} />

@@ -22,7 +22,7 @@ type LeadRow = {
   created_at: string;
   description: string | null;
   desired_timeline: string;
-  email: string;
+  email: string | null;
   estimated_budget: number | string;
   id: string;
   next_action: string | null;
@@ -77,7 +77,7 @@ function mapLead(row: LeadRow): Lead {
     created_at: row.created_at,
     description: row.description ?? "",
     desired_timeline: getEnumValue(desiredTimelines, row.desired_timeline, "unknown") as DesiredTimeline,
-    email: row.email,
+    email: row.email ?? "",
     estimated_budget: Number(row.estimated_budget),
     id: row.id,
     next_action: row.next_action ?? "Contactar lead",

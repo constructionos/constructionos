@@ -16,6 +16,11 @@ export function LeadTable({ leads }: { leads: Lead[] }) {
           <span>Proxima accion</span>
           <span />
         </div>
+        {!leads.length ? (
+          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+            Todavia no hay leads reales para esta empresa.
+          </div>
+        ) : null}
         {leads.map((lead) => (
           <div
             className="grid grid-cols-[1.2fr_1fr_0.8fr_0.9fr_0.8fr_44px] items-center border-b border-border px-4 py-4 text-sm last:border-0"

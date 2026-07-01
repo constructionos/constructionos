@@ -1,14 +1,15 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { BarChart3, Building2, ClipboardList, LayoutDashboard } from "lucide-react";
+import { BarChart3, Building2, ClipboardList, LayoutDashboard, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { signOutAction } from "@/modules/auth/actions";
 
 const navigation = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/leads", label: "Leads", icon: ClipboardList },
 ];
 
-export function DashboardShell({ children }: { children: ReactNode }) {
+export function DashboardShell({ children, userEmail }: { children: ReactNode; userEmail?: string }) {
   return (
     <div className="min-h-screen bg-background">
       <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-[#25342d] bg-[#17231d] text-white lg:block">
@@ -55,7 +56,24 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                   {item.label}
                 </Link>
               ))}
+              <form action={signOutAction}>
+                <button className="rounded-md px-3 py-2 hover:bg-muted hover:text-foreground" type="submit">
+                  Salir
+                </button>
+              </form>
             </nav>
+            <div className="ml-auto hidden items-center gap-3 lg:flex">
+              {userEmail ? <span className="text-sm text-muted-foreground">{userEmail}</span> : null}
+              <form action={signOutAction}>
+                <button
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                  type="submit"
+                >
+                  <LogOut aria-hidden="true" size={16} />
+                  Salir
+                </button>
+              </form>
+            </div>
           </div>
         </header>
         <main className="px-4 py-6 sm:px-6 lg:px-8">{children}</main>

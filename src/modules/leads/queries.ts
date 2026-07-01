@@ -1,101 +1,145 @@
-import { leadStatuses, type Lead, type LeadStatus } from "./types";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  budgetRanges,
+  desiredTimelines,
+  leadPriorities,
+  leadServiceTypes,
+  leadStatuses,
+  type BudgetRange,
+  type DesiredTimeline,
+  type Lead,
+  type LeadPriority,
+  type LeadServiceType,
+  type LeadStatus,
+} from "./types";
 
-// Dashboard lead reads intentionally stay on demo data until auth protects PII.
-const demoLeads: Lead[] = [
-  {
-    budget_range: "150k_300k",
-    city: "Madrid",
-    contact_name: "Marta Aldana",
-    created_at: "2026-06-24",
-    description: "Reforma integral de edificio residencial con tres fases y seguimiento semanal.",
-    desired_timeline: "1_3_months",
-    email: "marta@aldana.example",
-    estimated_budget: 185000,
-    id: "lead-001",
-    phone: "+34 600 000 101",
-    priority: "high",
-    province: "Madrid",
-    service_type: "renovation",
-    status: "budget_preparing",
-    title: "Reforma integral de edificio residencial",
-    next_action: "Preparar presupuesto por fases",
-    next_action_date: "2026-07-02",
-    zone: "Centro",
-  },
-  {
-    budget_range: "50k_150k",
-    city: "Bilbao",
-    contact_name: "Ivan Ruiz",
-    created_at: "2026-06-21",
-    description: "Coordinacion de obra para local comercial con apertura prevista en septiembre.",
-    desired_timeline: "3_6_months",
-    email: "ivan@nortearq.example",
-    estimated_budget: 94000,
-    id: "lead-002",
-    phone: "+34 600 000 202",
-    priority: "medium",
-    province: "Bizkaia",
-    service_type: "site_coordination",
-    status: "visit_pending",
-    title: "Coordinacion de local comercial",
-    next_action: "Agendar visita tecnica",
-    next_action_date: "2026-07-04",
-    zone: "Ensanche",
-  },
-  {
-    budget_range: "over_300k",
-    city: "Sevilla",
-    contact_name: "Lucia Perez",
-    created_at: "2026-06-18",
-    description: "Promocion residencial con necesidad de reporting de avance y control de visitas.",
-    desired_timeline: "more_than_6_months",
-    email: "lucia@habitatsur.example",
-    estimated_budget: 320000,
-    id: "lead-003",
-    phone: "+34 600 000 303",
-    priority: "high",
-    province: "Sevilla",
-    service_type: "new_build",
-    status: "new",
-    title: "Promocion residencial de obra nueva",
-    next_action: "Confirmar alcance",
-    next_action_date: "2026-07-05",
-    zone: "Nervion",
-  },
-  {
-    budget_range: "150k_300k",
-    city: "Valencia",
-    contact_name: "Sergio Campos",
-    created_at: "2026-06-11",
-    description: "Direccion tecnica de nave industrial con seguimiento de cambios previsto.",
-    desired_timeline: "1_3_months",
-    email: "sergio@tecnoobra.example",
-    estimated_budget: 260000,
-    id: "lead-004",
-    phone: "+34 600 000 404",
-    priority: "medium",
-    province: "Valencia",
-    service_type: "technical_direction",
-    status: "budget_sent",
-    title: "Direccion tecnica para nave industrial",
-    next_action: "Revisar mediciones",
-    next_action_date: "2026-07-08",
-    zone: "Paterna",
-  },
-];
+type LeadRow = {
+  budget_range: string;
+  city: string;
+  contact_name: string;
+  created_at: string;
+  description: string | null;
+  desired_timeline: string;
+  email: string;
+  estimated_budget: number | string;
+  id: string;
+  next_action: string | null;
+  next_action_date: string | null;
+  phone: string | null;
+  priority: string;
+  province: string;
+  service_type: string;
+  status: string;
+  title: string;
+  zone: string | null;
+};
 
 const closedLeadStatuses = new Set<LeadStatus>(["discarded", "lost", "won"]);
+
+const leadSelect = `
+  id,
+  title,
+  service_type,
+  zone,
+  city,
+  province,
+  estimated_budget,
+  budget_range,
+  desired_timeline,
+  description,
+  status,
+  priority,
+  next_action,
+  next_action_date,
+  contact_name,
+  email,
+  phone,
+  created_at
+`;
 
 function createLeadStatusCounts() {
   return Object.fromEntries(leadStatuses.map((status) => [status, 0])) as Record<LeadStatus, number>;
 }
 
+function getEnumValue<T extends string>(values: readonly T[], value: string, fallback: T): T {
+  return values.includes(value as T) ? (value as T) : fallback;
+}
+
+function mapLead(row: LeadRow): Lead {
+  return {
+    budget_range: getEnumValue(budgetRanges, row.budget_range, "unknown") as BudgetRange,
+    city: row.city,
+    contact_name: row.contact_name,
+    created_at: row.created_at,
+    description: row.description ?? "",
+    desired_timeline: getEnumValue(desiredTimelines, row.desired_timeline, "unknown") as DesiredTimeline,
+    email: row.email,
+    estimated_budget: Number(row.estimated_budget),
+    id: row.id,
+    next_action: row.next_action ?? "Contactar lead",
+    next_action_date: row.next_action_date ?? row.created_at,
+    phone: row.phone ?? "",
+    priority: getEnumValue(leadPriorities, row.priority, "medium") as LeadPriority,
+    province: row.province,
+    service_type: getEnumValue(leadServiceTypes, row.service_type, "other") as LeadServiceType,
+    status: getEnumValue(leadStatuses, row.status, "new") as LeadStatus,
+    title: row.title,
+    zone: row.zone ?? "Por definir",
+  };
+}
+
+async function getAuthenticatedSupabase() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return null;
+  }
+
+  return supabase;
+}
+
 export async function getLeads() {
-  return demoLeads;
+  const supabase = await getAuthenticatedSupabase();
+
+  if (!supabase) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("leads")
+    .select(leadSelect)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Failed to load leads", error);
+    return [];
+  }
+
+  return ((data ?? []) as LeadRow[]).map(mapLead);
 }
 
 export async function getLeadById(id: string) {
-  return demoLeads.find((lead) => lead.id === id) ?? null;
+  const supabase = await getAuthenticatedSupabase();
+
+  if (!supabase) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from("leads")
+    .select(leadSelect)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Failed to load lead", error);
+    return null;
+  }
+
+  return data ? mapLead(data as LeadRow) : null;
 }
 
 export async function getLeadStats() {
@@ -112,6 +156,7 @@ export async function getLeadStats() {
   return {
     byStatus,
     budgetSent: byStatus.budget_sent,
+    newLeads: byStatus.new,
     openLeads: leads.filter((lead) => !closedLeadStatuses.has(lead.status)).length,
     pipelineValue,
     totalLeads: leads.length,

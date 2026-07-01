@@ -12,6 +12,7 @@ import {
   desiredTimelineLabels,
   leadPriorityLabels,
   leadServiceTypeLabels,
+  leadSourceLabels,
 } from "@/modules/leads/types";
 
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -40,7 +41,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
       <section className="space-y-3">
         <h2 className="font-semibold">Resumen del lead</h2>
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-5">
           <Card className="p-5">
             <p className="text-sm text-muted-foreground">Valor estimado</p>
             <p className="mt-3 text-2xl font-semibold">{formatCurrency(lead.estimated_budget)}</p>
@@ -56,6 +57,10 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           <Card className="p-5">
             <p className="text-sm text-muted-foreground">Prioridad</p>
             <p className="mt-3 text-2xl font-semibold">{leadPriorityLabels[lead.priority]}</p>
+          </Card>
+          <Card className="p-5">
+            <p className="text-sm text-muted-foreground">Origen</p>
+            <p className="mt-3 text-2xl font-semibold">{leadSourceLabels[lead.source]}</p>
           </Card>
         </div>
       </section>

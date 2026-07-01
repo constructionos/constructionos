@@ -31,10 +31,10 @@ export default async function DashboardPage() {
       <section className="grid gap-4 md:grid-cols-3">
         <Card className="p-5">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Leads abiertos</span>
+            <span className="text-sm text-muted-foreground">Leads totales</span>
             <Users aria-hidden="true" className="text-primary" size={18} />
           </div>
-          <p className="mt-4 text-3xl font-semibold">{stats.openLeads}</p>
+          <p className="mt-4 text-3xl font-semibold">{stats.totalLeads}</p>
         </Card>
         <Card className="p-5">
           <div className="flex items-center justify-between">
@@ -45,10 +45,10 @@ export default async function DashboardPage() {
         </Card>
         <Card className="p-5">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Presupuestos enviados</span>
+            <span className="text-sm text-muted-foreground">Leads nuevos</span>
             <TrendingUp aria-hidden="true" className="text-primary" size={18} />
           </div>
-          <p className="mt-4 text-3xl font-semibold">{stats.budgetSent}</p>
+          <p className="mt-4 text-3xl font-semibold">{stats.newLeads}</p>
         </Card>
       </section>
 
@@ -58,21 +58,27 @@ export default async function DashboardPage() {
             <h2 className="font-semibold">Oportunidades recientes</h2>
             <ClipboardList aria-hidden="true" className="text-muted-foreground" size={18} />
           </div>
-          <div className="space-y-3">
-            {recentLeads.map((lead) => (
-              <Link
-                className="flex items-center justify-between rounded-md border border-border p-3 transition hover:bg-muted/70"
-                href={`/leads/${lead.id}`}
-                key={lead.id}
-              >
-                <div>
-                  <p className="font-medium">{lead.title}</p>
-                  <p className="text-sm text-muted-foreground">{lead.next_action}</p>
-                </div>
-                <LeadStatusBadge status={lead.status} />
-              </Link>
-            ))}
-          </div>
+          {recentLeads.length ? (
+            <div className="space-y-3">
+              {recentLeads.map((lead) => (
+                <Link
+                  className="flex items-center justify-between rounded-md border border-border p-3 transition hover:bg-muted/70"
+                  href={`/leads/${lead.id}`}
+                  key={lead.id}
+                >
+                  <div>
+                    <p className="font-medium">{lead.title}</p>
+                    <p className="text-sm text-muted-foreground">{lead.next_action}</p>
+                  </div>
+                  <LeadStatusBadge status={lead.status} />
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">
+              Todavia no hay leads reales para esta empresa.
+            </p>
+          )}
         </Card>
 
         <Card className="p-5">
@@ -90,7 +96,7 @@ export default async function DashboardPage() {
                   <div className="h-2 rounded-full bg-muted">
                     <div
                       className="h-2 rounded-full bg-primary"
-                      style={{ width: `${Math.max((count / stats.totalLeads) * 100, 6)}%` }}
+                      style={{ width: stats.totalLeads ? `${Math.max((count / stats.totalLeads) * 100, 6)}%` : "0%" }}
                     />
                   </div>
                 </div>

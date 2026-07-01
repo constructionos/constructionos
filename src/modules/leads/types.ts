@@ -12,12 +12,14 @@ export const leadStatuses = [
 ] as const;
 export const leadPriorities = ["low", "medium", "high"] as const;
 export const leadServiceTypes = ["renovation", "new_build", "technical_direction", "site_coordination", "other"] as const;
+export const leadSources = ["web", "whatsapp", "phone", "manual", "referral", "ads"] as const;
 export const budgetRanges = ["under_50k", "50k_150k", "150k_300k", "over_300k", "unknown"] as const;
 export const desiredTimelines = ["asap", "1_3_months", "3_6_months", "more_than_6_months", "unknown"] as const;
 
 export type LeadStatus = (typeof leadStatuses)[number];
 export type LeadPriority = (typeof leadPriorities)[number];
 export type LeadServiceType = (typeof leadServiceTypes)[number];
+export type LeadSource = (typeof leadSources)[number];
 export type BudgetRange = (typeof budgetRanges)[number];
 export type DesiredTimeline = (typeof desiredTimelines)[number];
 
@@ -64,6 +66,15 @@ export const leadPriorityLabels: Record<LeadPriority, string> = {
   medium: "Media",
 };
 
+export const leadSourceLabels: Record<LeadSource, string> = {
+  ads: "Ads",
+  manual: "Manual",
+  phone: "Llamada",
+  referral: "Referido",
+  web: "Web",
+  whatsapp: "WhatsApp",
+};
+
 export type Lead = {
   budget_range: BudgetRange;
   city: string;
@@ -80,6 +91,7 @@ export type Lead = {
   priority: LeadPriority;
   province: string;
   service_type: LeadServiceType;
+  source: LeadSource;
   status: LeadStatus;
   title: string;
   zone: string;

@@ -4,12 +4,14 @@ import {
   desiredTimelines,
   leadPriorities,
   leadServiceTypes,
+  leadSources,
   leadStatuses,
   type BudgetRange,
   type DesiredTimeline,
   type Lead,
   type LeadPriority,
   type LeadServiceType,
+  type LeadSource,
   type LeadStatus,
 } from "./types";
 
@@ -29,6 +31,7 @@ type LeadRow = {
   priority: string;
   province: string;
   service_type: string;
+  source: string;
   status: string;
   title: string;
   zone: string | null;
@@ -54,6 +57,7 @@ const leadSelect = `
   contact_name,
   email,
   phone,
+  source,
   created_at
 `;
 
@@ -82,6 +86,7 @@ function mapLead(row: LeadRow): Lead {
     priority: getEnumValue(leadPriorities, row.priority, "medium") as LeadPriority,
     province: row.province,
     service_type: getEnumValue(leadServiceTypes, row.service_type, "other") as LeadServiceType,
+    source: getEnumValue(leadSources, row.source, "web") as LeadSource,
     status: getEnumValue(leadStatuses, row.status, "new") as LeadStatus,
     title: row.title,
     zone: row.zone ?? "Por definir",

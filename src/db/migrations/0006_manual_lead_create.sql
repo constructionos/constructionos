@@ -1,3 +1,5 @@
+alter type public.lead_source add value if not exists 'email';
+
 alter table public.leads
   alter column email drop not null;
 

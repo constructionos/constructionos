@@ -23,7 +23,7 @@ const initialState: ManualLeadActionState = {
   ok: false,
 };
 
-const orderedSources: LeadSource[] = ["whatsapp", "phone", "manual", "referral", "ads", "web"];
+const orderedSources: LeadSource[] = ["whatsapp", "phone", "email", "manual", "referral", "ads", "web"];
 
 function FieldError({ messages }: { messages?: string[] }) {
   if (!messages?.length) {

@@ -13,6 +13,7 @@ const priorityTones: Record<Lead["priority"], "neutral" | "amber" | "blue"> = {
 
 const sourceTones: Record<Lead["source"], "neutral" | "green" | "amber" | "blue"> = {
   ads: "amber",
+  email: "blue",
   manual: "neutral",
   phone: "green",
   referral: "green",

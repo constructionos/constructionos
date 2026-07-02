@@ -1,6 +1,6 @@
+import Link from "next/link";
 import { ClipboardList, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { LeadTable } from "@/modules/leads/components/lead-table";
 import { getLeads } from "@/modules/leads/queries";
 
@@ -15,10 +15,13 @@ export default async function LeadsPage() {
           <h1 className="mt-3 text-3xl font-semibold tracking-normal">Leads</h1>
           <p className="mt-2 text-muted-foreground">Seguimiento inicial de oportunidades comerciales.</p>
         </div>
-        <Button disabled variant="secondary">
+        <Link
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-medium transition hover:bg-muted"
+          href="/leads/new"
+        >
           <Plus aria-hidden="true" size={16} />
           Nuevo lead
-        </Button>
+        </Link>
       </div>
 
       <section className="grid gap-4 sm:grid-cols-3">

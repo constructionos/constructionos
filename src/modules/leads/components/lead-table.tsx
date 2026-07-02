@@ -13,6 +13,7 @@ const priorityTones: Record<Lead["priority"], "neutral" | "amber" | "blue"> = {
 
 const sourceTones: Record<Lead["source"], "neutral" | "green" | "amber" | "blue"> = {
   ads: "amber",
+  email: "blue",
   manual: "neutral",
   phone: "green",
   referral: "green",
@@ -27,10 +28,10 @@ export function LeadTable({ leads }: { leads: Lead[] }) {
         <div className="grid grid-cols-[1.2fr_1fr_0.9fr_0.75fr_0.8fr_1.2fr_1fr_0.8fr_44px] border-b border-border bg-muted/70 px-4 py-3 text-xs font-semibold uppercase text-muted-foreground">
           <span>Oportunidad</span>
           <span>Contacto</span>
-          <span>Estado</span>
+          <span>Fase</span>
           <span>Origen</span>
           <span>Prioridad</span>
-          <span>Proxima accion</span>
+          <span>Tarea</span>
           <span>Tipo y ciudad</span>
           <span>Creado</span>
           <span />
@@ -53,7 +54,7 @@ export function LeadTable({ leads }: { leads: Lead[] }) {
             </div>
             <div>
               <p>{lead.contact_name}</p>
-              <p className="text-muted-foreground">{lead.email}</p>
+              <p className="text-muted-foreground">{lead.email || "Sin email"}</p>
             </div>
             <LeadStatusBadge status={lead.status} />
             <Badge tone={sourceTones[lead.source]}>{leadSourceLabels[lead.source]}</Badge>

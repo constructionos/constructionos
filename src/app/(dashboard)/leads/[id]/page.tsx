@@ -72,7 +72,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             <p className="font-medium">{lead.contact_name}</p>
             <p className="flex items-center gap-3">
               <Mail aria-hidden="true" className="text-primary" size={17} />
-              {lead.email}
+              {lead.email || "Sin email"}
             </p>
             <p className="flex items-center gap-3">
               <Phone aria-hidden="true" className="text-primary" size={17} />
@@ -115,7 +115,8 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
         </Card>
 
         <Card className="p-5">
-          <h2 className="font-semibold">Proxima accion</h2>
+          <h2 className="font-semibold">Siguiente tarea</h2>
+          <p className="mt-2 text-sm text-muted-foreground">Que hay que hacer ahora con este lead.</p>
           <div className="mt-4 flex items-start gap-3 rounded-md bg-muted p-4">
             <CalendarDays aria-hidden="true" className="mt-0.5 text-primary" size={18} />
             <div>

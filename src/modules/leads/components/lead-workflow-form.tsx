@@ -51,8 +51,9 @@ export function LeadWorkflowForm({ lead }: { lead: Lead }) {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <label className="text-sm font-medium" htmlFor="status">
-            Estado
+            Fase comercial
           </label>
+          <p className="text-xs text-muted-foreground">En que fase esta el lead.</p>
           <Select defaultValue={lead.status} id="status" name="status">
             {leadStatuses.map((status) => (
               <option key={status} value={status}>
@@ -79,9 +80,20 @@ export function LeadWorkflowForm({ lead }: { lead: Lead }) {
       <div className="grid gap-4 sm:grid-cols-[1fr_180px]">
         <div className="space-y-1.5">
           <label className="text-sm font-medium" htmlFor="next_action">
-            Proxima accion
+            Siguiente tarea
           </label>
-          <Input id="next_action" maxLength={180} name="next_action" required defaultValue={lead.next_action} />
+          <p className="text-xs text-muted-foreground">Que hay que hacer ahora con este lead.</p>
+          <Input
+            id="next_action"
+            maxLength={180}
+            name="next_action"
+            required
+            defaultValue={lead.next_action}
+            placeholder="Llamar para concretar visita"
+          />
+          <p className="text-xs text-muted-foreground">
+            Ejemplos: pedir fotos o medidas, preparar presupuesto, hacer seguimiento del presupuesto.
+          </p>
           <FieldError messages={state.fieldErrors?.next_action} />
         </div>
         <div className="space-y-1.5">

@@ -20,9 +20,9 @@ export default async function DashboardPage() {
         </div>
         <Link
           className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-4 py-2 text-sm font-medium shadow-sm transition hover:bg-muted"
-          href="/leads"
+          href="/leads/new"
         >
-          Ver leads
+          Registrar lead manual
           <ArrowUpRight aria-hidden="true" size={16} />
         </Link>
       </div>

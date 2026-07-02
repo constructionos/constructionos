@@ -12,7 +12,7 @@ export const leadStatuses = [
 ] as const;
 export const leadPriorities = ["low", "medium", "high"] as const;
 export const leadServiceTypes = ["renovation", "new_build", "technical_direction", "site_coordination", "other"] as const;
-export const leadSources = ["web", "whatsapp", "phone", "manual", "referral", "ads"] as const;
+export const leadSources = ["web", "whatsapp", "phone", "email", "manual", "referral", "ads"] as const;
 export const budgetRanges = ["under_50k", "50k_150k", "150k_300k", "over_300k", "unknown"] as const;
 export const desiredTimelines = ["asap", "1_3_months", "3_6_months", "more_than_6_months", "unknown"] as const;
 
@@ -68,6 +68,7 @@ export const leadPriorityLabels: Record<LeadPriority, string> = {
 
 export const leadSourceLabels: Record<LeadSource, string> = {
   ads: "Ads",
+  email: "Email",
   manual: "Manual",
   phone: "Llamada",
   referral: "Referido",

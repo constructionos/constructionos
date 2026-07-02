@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getActiveCompanyForUser } from "@/modules/companies/queries";
 import { budgetRanges, desiredTimelines, leadPriorities, leadServiceTypes, leadSources, leadStatuses } from "./types";
 
 const leadCaptureSchema = z.object({
@@ -128,6 +129,7 @@ const optionalTextSchema = (maxLength: number) =>
 const manualLeadSchema = z.object({
   budget_range: z.enum(budgetRanges),
   city: z.string().trim().min(2, "Indica la ciudad.").max(120, "La ciudad es demasiado larga."),
+  company_slug: z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Empresa no valida."),
   contact_name: z.string().trim().min(2, "Indica una persona de contacto.").max(160, "El contacto es demasiado largo."),
   description: z
     .string()
@@ -401,20 +403,9 @@ export async function createManualLeadAction(
     };
   }
 
-  const { data: membership, error: membershipError } = await supabase
-    .from("memberships")
-    .select("company_id")
-    .eq("user_id", user.id)
-    // TODO: replace this with an explicit company switcher when multi-company UI exists.
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  const companyContext = await getActiveCompanyForUser(supabase, user.id, parsed.data.company_slug);
 
-  if (membershipError) {
-    console.error("Failed to resolve lead company", membershipError);
-  }
-
-  if (!membership?.company_id) {
+  if (!companyContext) {
     return {
       message: "Tu usuario no esta asociado a ninguna empresa.",
       ok: false,
@@ -427,7 +418,7 @@ export async function createManualLeadAction(
     .insert({
       budget_range: values.budget_range,
       city: values.city,
-      company_id: membership.company_id,
+      company_id: companyContext.activeCompany.id,
       contact_name: values.contact_name,
       description: values.description,
       desired_timeline: values.desired_timeline,
@@ -464,5 +455,7 @@ export async function createManualLeadAction(
 
   revalidatePath("/dashboard");
   revalidatePath("/leads");
-  redirect(`/leads/${data.id}`);
+  revalidatePath(`/dashboard?company=${companyContext.activeCompany.slug}`);
+  revalidatePath(`/leads?company=${companyContext.activeCompany.slug}`);
+  redirect(`/leads/${data.id}?company=${companyContext.activeCompany.slug}`);
 }

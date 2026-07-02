@@ -1,11 +1,37 @@
 import Link from "next/link";
 import { ClipboardList, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { CompanySwitcher } from "@/components/layout/company-switcher";
+import { getActiveCompany } from "@/modules/companies/queries";
 import { LeadTable } from "@/modules/leads/components/lead-table";
 import { getLeads } from "@/modules/leads/queries";
 
-export default async function LeadsPage() {
-  const leads = await getLeads();
+type LeadsPageProps = {
+  searchParams: Promise<{ company?: string | string[] }>;
+};
+
+function companyHref(path: string, slug: string) {
+  return `${path}?company=${encodeURIComponent(slug)}`;
+}
+
+export default async function LeadsPage({ searchParams }: LeadsPageProps) {
+  const { company } = await searchParams;
+  const companyContext = await getActiveCompany(company);
+
+  if (!companyContext) {
+    return (
+      <div className="mx-auto max-w-3xl">
+        <Card className="p-6">
+          <h1 className="text-2xl font-semibold">Empresa no disponible</h1>
+          <p className="mt-3 text-muted-foreground">No tienes acceso a esta empresa o tu usuario no tiene membership.</p>
+        </Card>
+      </div>
+    );
+  }
+
+  const { activeCompany, companies } = companyContext;
+  const leads = await getLeads(activeCompany.id);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -17,12 +43,14 @@ export default async function LeadsPage() {
         </div>
         <Link
           className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-medium transition hover:bg-muted"
-          href="/leads/new"
+          href={companyHref("/leads/new", activeCompany.slug)}
         >
           <Plus aria-hidden="true" size={16} />
           Nuevo lead
         </Link>
       </div>
+
+      <CompanySwitcher activeCompany={activeCompany} companies={companies} currentPath="/leads" />
 
       <section className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-lg border border-border bg-card p-4">
@@ -40,7 +68,7 @@ export default async function LeadsPage() {
         </div>
       </section>
 
-      <LeadTable leads={leads} />
+      <LeadTable companySlug={activeCompany.slug} leads={leads} />
     </div>
   );
 }

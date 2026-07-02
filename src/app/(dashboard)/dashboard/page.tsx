@@ -2,12 +2,37 @@ import Link from "next/link";
 import { ArrowUpRight, ClipboardList, PhoneCall, Send, Trophy, TrendingUp, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { CompanySwitcher } from "@/components/layout/company-switcher";
+import { getActiveCompany } from "@/modules/companies/queries";
 import { LeadStatusBadge } from "@/modules/leads/components/lead-status-badge";
 import { getLeads, getLeadStats } from "@/modules/leads/queries";
 import { leadStatusLabels, type LeadStatus } from "@/modules/leads/types";
 
-export default async function DashboardPage() {
-  const [stats, leads] = await Promise.all([getLeadStats(), getLeads()]);
+type DashboardPageProps = {
+  searchParams: Promise<{ company?: string | string[] }>;
+};
+
+function companyHref(path: string, slug: string) {
+  return `${path}?company=${encodeURIComponent(slug)}`;
+}
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
+  const { company } = await searchParams;
+  const companyContext = await getActiveCompany(company);
+
+  if (!companyContext) {
+    return (
+      <div className="mx-auto max-w-3xl">
+        <Card className="p-6">
+          <h1 className="text-2xl font-semibold">Empresa no disponible</h1>
+          <p className="mt-3 text-muted-foreground">No tienes acceso a esta empresa o tu usuario no tiene membership.</p>
+        </Card>
+      </div>
+    );
+  }
+
+  const { activeCompany, companies } = companyContext;
+  const [stats, leads] = await Promise.all([getLeadStats(activeCompany.id), getLeads(activeCompany.id)]);
   const recentLeads = leads.slice(0, 3);
 
   return (
@@ -20,12 +45,14 @@ export default async function DashboardPage() {
         </div>
         <Link
           className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-4 py-2 text-sm font-medium shadow-sm transition hover:bg-muted"
-          href="/leads/new"
+          href={companyHref("/leads/new", activeCompany.slug)}
         >
           Registrar lead manual
           <ArrowUpRight aria-hidden="true" size={16} />
         </Link>
       </div>
+
+      <CompanySwitcher activeCompany={activeCompany} companies={companies} currentPath="/dashboard" />
 
       <section className="grid gap-4 md:grid-cols-5">
         <Card className="p-5">
@@ -76,7 +103,7 @@ export default async function DashboardPage() {
               {recentLeads.map((lead) => (
                 <Link
                   className="flex items-center justify-between rounded-md border border-border p-3 transition hover:bg-muted/70"
-                  href={`/leads/${lead.id}`}
+                  href={companyHref(`/leads/${lead.id}`, activeCompany.slug)}
                   key={lead.id}
                 >
                   <div>

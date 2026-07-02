@@ -21,7 +21,11 @@ const sourceTones: Record<Lead["source"], "neutral" | "green" | "amber" | "blue"
   whatsapp: "green",
 };
 
-export function LeadTable({ leads }: { leads: Lead[] }) {
+function leadHref(id: string, companySlug?: string) {
+  return companySlug ? `/leads/${id}?company=${encodeURIComponent(companySlug)}` : `/leads/${id}`;
+}
+
+export function LeadTable({ companySlug, leads }: { companySlug?: string; leads: Lead[] }) {
   return (
     <div className="overflow-x-auto rounded-lg border border-border bg-card">
       <div className="min-w-[1220px]">
@@ -71,7 +75,7 @@ export function LeadTable({ leads }: { leads: Lead[] }) {
             <Link
               aria-label={`Abrir ${lead.title}`}
               className="flex size-9 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground"
-              href={`/leads/${lead.id}`}
+              href={leadHref(lead.id, companySlug)}
             >
               <ArrowUpRight aria-hidden="true" size={16} />
             </Link>

@@ -44,11 +44,12 @@ function SubmitButton() {
   );
 }
 
-export function ManualLeadForm() {
+export function ManualLeadForm({ activeCompanySlug }: { activeCompanySlug: string }) {
   const [state, formAction] = useActionState(createManualLeadAction, initialState);
 
   return (
     <form action={formAction} className="space-y-6 rounded-lg border border-border bg-card p-5 shadow-sm">
+      <input name="company_slug" type="hidden" value={activeCompanySlug} />
       <section className="grid gap-4 md:grid-cols-[0.8fr_1fr]">
         <div className="space-y-1.5">
           <label className="text-sm font-medium" htmlFor="source">
@@ -212,7 +213,7 @@ export function ManualLeadForm() {
         <SubmitButton />
         <Link
           className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-card px-4 text-sm font-medium transition hover:bg-muted"
-          href="/leads"
+          href={`/leads?company=${encodeURIComponent(activeCompanySlug)}`}
         >
           Cancelar
         </Link>

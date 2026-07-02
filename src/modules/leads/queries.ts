@@ -106,7 +106,7 @@ async function getAuthenticatedSupabase() {
   return supabase;
 }
 
-export async function getLeads() {
+export async function getLeads(companyId: string) {
   const supabase = await getAuthenticatedSupabase();
 
   if (!supabase) {
@@ -116,6 +116,7 @@ export async function getLeads() {
   const { data, error } = await supabase
     .from("leads")
     .select(leadSelect)
+    .eq("company_id", companyId)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -126,7 +127,7 @@ export async function getLeads() {
   return ((data ?? []) as LeadRow[]).map(mapLead);
 }
 
-export async function getLeadById(id: string) {
+export async function getLeadById(id: string, companyId: string) {
   const supabase = await getAuthenticatedSupabase();
 
   if (!supabase) {
@@ -137,6 +138,7 @@ export async function getLeadById(id: string) {
     .from("leads")
     .select(leadSelect)
     .eq("id", id)
+    .eq("company_id", companyId)
     .maybeSingle();
 
   if (error) {
@@ -147,8 +149,8 @@ export async function getLeadById(id: string) {
   return data ? mapLead(data as LeadRow) : null;
 }
 
-export async function getLeadStats() {
-  const leads = await getLeads();
+export async function getLeadStats(companyId: string) {
+  const leads = await getLeads(companyId);
   const pipelineValue = leads.reduce((total, lead) => total + lead.estimated_budget, 0);
   const byStatus = leads.reduce<Record<LeadStatus, number>>(
     (accumulator, lead) => {

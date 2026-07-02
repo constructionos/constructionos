@@ -24,8 +24,52 @@ const leadCaptureSchema = z.object({
   website: z.string().trim().optional(),
 });
 
+const optionalContactEmailSchema = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") {
+      return undefined;
+    }
+
+    const trimmed = value.trim();
+    return trimmed ? trimmed : undefined;
+  },
+  z.string().email("El email no tiene un formato valido.").optional(),
+);
+
+const optionalContactPhoneSchema = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") {
+      return undefined;
+    }
+
+    const trimmed = value.trim();
+    return trimmed ? trimmed : undefined;
+  },
+  z
+    .string()
+    .min(6, "Indica un telefono de contacto.")
+    .max(40, "El telefono es demasiado largo.")
+    .regex(/^[0-9+(). -]+$/, "El telefono solo puede incluir numeros, espacios y simbolos basicos.")
+    .optional(),
+);
+
+const companyLeadCaptureSchema = leadCaptureSchema
+  .omit({
+    email: true,
+    phone: true,
+  })
+  .extend({
+    company_slug: z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "El formulario no esta disponible."),
+    email: optionalContactEmailSchema,
+    phone: optionalContactPhoneSchema,
+  })
+  .refine((value) => value.email || value.phone, {
+    message: "Indica al menos email o telefono para poder contactar contigo.",
+    path: ["email"],
+  });
+
 export type LeadActionState = {
-  fieldErrors?: Partial<Record<keyof z.infer<typeof leadCaptureSchema>, string[]>>;
+  fieldErrors?: Partial<Record<keyof z.infer<typeof companyLeadCaptureSchema>, string[]>>;
   message?: string;
   ok: boolean;
 };
@@ -171,6 +215,73 @@ export async function createLeadAction(
   }
 
   revalidatePath("/");
+
+  return {
+    message: "Lead registrado para seguimiento comercial.",
+    ok: true,
+  };
+}
+
+export async function createCompanyPublicLeadAction(
+  _previousState: LeadActionState,
+  formData: FormData,
+): Promise<LeadActionState> {
+  const parsed = companyLeadCaptureSchema.safeParse({
+    budget_range: formData.get("budget_range"),
+    city: formData.get("city"),
+    company_slug: formData.get("company_slug"),
+    contact_name: formData.get("contact_name"),
+    description: formData.get("description"),
+    desired_timeline: formData.get("desired_timeline"),
+    email: formData.get("email"),
+    phone: formData.get("phone"),
+    service_type: formData.get("service_type"),
+    title: formData.get("title"),
+    website: formData.get("website"),
+  });
+
+  if (!parsed.success) {
+    return {
+      fieldErrors: parsed.error.flatten().fieldErrors,
+      message: "Revisa los campos marcados.",
+      ok: false,
+    };
+  }
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.rpc("create_public_lead_for_company", {
+      p_budget_range: parsed.data.budget_range,
+      p_city: parsed.data.city,
+      p_company_slug: parsed.data.company_slug,
+      p_contact_name: parsed.data.contact_name,
+      p_description: parsed.data.description,
+      p_desired_timeline: parsed.data.desired_timeline,
+      p_email: parsed.data.email ?? null,
+      p_honeypot: parsed.data.website ?? "",
+      p_phone: parsed.data.phone ?? null,
+      p_service_type: parsed.data.service_type,
+      p_title: parsed.data.title,
+    });
+
+    if (error) {
+      console.error("Failed to create company public lead", error);
+
+      return {
+        message: "No hemos podido registrar el lead. Intentalo de nuevo.",
+        ok: false,
+      };
+    }
+  } catch (error) {
+    console.error("Company public lead capture is not configured", error);
+
+    return {
+      message: "La captacion no esta configurada todavia.",
+      ok: false,
+    };
+  }
+
+  revalidatePath(`/intake/${parsed.data.company_slug}`);
 
   return {
     message: "Lead registrado para seguimiento comercial.",

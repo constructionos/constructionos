@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { budgetRangeLabels, desiredTimelineLabels } from "../types";
-import { createLeadAction, type LeadActionState } from "../actions";
+import { createCompanyPublicLeadAction, createLeadAction, type LeadActionState } from "../actions";
 
 const initialState: LeadActionState = {
   ok: false,
@@ -32,8 +32,15 @@ function FieldError({ messages }: { messages?: string[] }) {
   return <p className="text-xs text-red-700">{messages[0]}</p>;
 }
 
-export function LeadCaptureForm() {
-  const [state, formAction] = useActionState(createLeadAction, initialState);
+type LeadCaptureFormProps = {
+  companySlug?: string;
+  mode?: "demo" | "company";
+};
+
+export function LeadCaptureForm({ companySlug, mode = "demo" }: LeadCaptureFormProps) {
+  const isCompanyIntake = mode === "company" && Boolean(companySlug);
+  const action = isCompanyIntake ? createCompanyPublicLeadAction : createLeadAction;
+  const [state, formAction] = useActionState(action, initialState);
 
   return (
     <form action={formAction} className="space-y-4 rounded-lg border border-border bg-card p-5 shadow-sm">
@@ -73,6 +80,9 @@ export function LeadCaptureForm() {
           Email
         </label>
         <Input id="email" name="email" placeholder="contacto@empresa.com" type="email" />
+        {isCompanyIntake ? (
+          <p className="text-xs text-muted-foreground">Indica al menos email o telefono para poder contactar contigo.</p>
+        ) : null}
         <FieldError messages={state.fieldErrors?.email} />
       </div>
       <div className="space-y-1.5">
@@ -134,6 +144,7 @@ export function LeadCaptureForm() {
         <label htmlFor="website">Web</label>
         <Input autoComplete="off" id="website" name="website" tabIndex={-1} />
       </div>
+      {isCompanyIntake ? <input name="company_slug" type="hidden" value={companySlug} /> : null}
       <SubmitButton />
       {state.message ? (
         <p className={state.ok ? "text-sm text-emerald-700" : "text-sm text-red-700"}>{state.message}</p>

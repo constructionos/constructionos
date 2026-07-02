@@ -1,13 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { BarChart3, Building2, ClipboardList, LayoutDashboard, LogOut } from "lucide-react";
-import { cn } from "@/lib/utils/cn";
+import { BarChart3, Building2, LogOut } from "lucide-react";
+import { DashboardNavigation } from "@/components/layout/dashboard-navigation";
 import { signOutAction } from "@/modules/auth/actions";
-
-const navigation = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/leads", label: "Leads", icon: ClipboardList },
-];
 
 export function DashboardShell({ children, userEmail }: { children: ReactNode; userEmail?: string }) {
   return (
@@ -20,18 +15,7 @@ export function DashboardShell({ children, userEmail }: { children: ReactNode; u
           <span className="font-semibold tracking-tight">ConstructionOS</span>
         </div>
         <nav className="space-y-1 px-3 py-4">
-          {navigation.map((item) => (
-            <Link
-              className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm text-white/74 transition hover:bg-white/10 hover:text-white",
-              )}
-              href={item.href}
-              key={item.href}
-            >
-              <item.icon aria-hidden="true" size={17} />
-              {item.label}
-            </Link>
-          ))}
+          <DashboardNavigation />
         </nav>
         <div className="absolute bottom-5 left-5 right-5 rounded-lg border border-white/10 bg-white/[0.04] p-4">
           <div className="flex items-center gap-2 text-sm font-medium">
@@ -51,11 +35,7 @@ export function DashboardShell({ children, userEmail }: { children: ReactNode; u
               ConstructionOS
             </Link>
             <nav className="ml-auto flex items-center gap-2 text-sm text-muted-foreground lg:hidden">
-              {navigation.map((item) => (
-                <Link className="rounded-md px-3 py-2 hover:bg-muted hover:text-foreground" href={item.href} key={item.href}>
-                  {item.label}
-                </Link>
-              ))}
+              <DashboardNavigation variant="mobile" />
               <form action={signOutAction}>
                 <button className="rounded-md px-3 py-2 hover:bg-muted hover:text-foreground" type="submit">
                   Salir

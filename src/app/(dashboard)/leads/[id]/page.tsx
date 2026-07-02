@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarDays, FileText, Mail, MapPin, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { CompanySwitcher } from "@/components/layout/company-switcher";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
+import { getActiveCompany } from "@/modules/companies/queries";
 import { LeadStatusBadge } from "@/modules/leads/components/lead-status-badge";
 import { LeadWorkflowForm } from "@/modules/leads/components/lead-workflow-form";
 import { getLeadById } from "@/modules/leads/queries";
@@ -15,9 +17,26 @@ import {
   leadSourceLabels,
 } from "@/modules/leads/types";
 
-export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
+type LeadDetailPageProps = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ company?: string | string[] }>;
+};
+
+function companyHref(path: string, slug: string) {
+  return `${path}?company=${encodeURIComponent(slug)}`;
+}
+
+export default async function LeadDetailPage({ params, searchParams }: LeadDetailPageProps) {
   const { id } = await params;
-  const lead = await getLeadById(id);
+  const { company } = await searchParams;
+  const companyContext = await getActiveCompany(company);
+
+  if (!companyContext) {
+    notFound();
+  }
+
+  const { activeCompany, companies } = companyContext;
+  const lead = await getLeadById(id, activeCompany.id);
 
   if (!lead) {
     notFound();
@@ -25,10 +44,12 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <Link className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground" href="/leads">
+      <Link className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground" href={companyHref("/leads", activeCompany.slug)}>
         <ArrowLeft aria-hidden="true" size={16} />
         Volver a leads
       </Link>
+
+      <CompanySwitcher activeCompany={activeCompany} companies={companies} currentPath="/leads" />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>

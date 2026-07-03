@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ClipboardList, LayoutDashboard } from "lucide-react";
+import { ClipboardList, LayoutDashboard, Plus } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 const navigation = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/leads", label: "Leads", icon: ClipboardList },
+  { href: "/leads", label: "Oportunidades", icon: ClipboardList },
+  { href: "/leads/new", label: "Nueva oportunidad", icon: Plus },
 ];
 
 function hrefWithCompany(path: string, companySlug: string | null) {

@@ -20,9 +20,9 @@ export function DashboardShell({ children, userEmail }: { children: ReactNode; u
         <div className="absolute bottom-5 left-5 right-5 rounded-lg border border-white/10 bg-white/[0.04] p-4">
           <div className="flex items-center gap-2 text-sm font-medium">
             <BarChart3 aria-hidden="true" size={16} />
-            Demo CRM
+            Oficina comercial
           </div>
-          <p className="mt-2 text-xs leading-5 text-white/62">Oportunidades, seguimiento y actividad comercial.</p>
+          <p className="mt-2 text-xs leading-5 text-white/62">Oportunidades, tareas y seguimiento por empresa.</p>
         </div>
       </aside>
       <div className="lg:pl-64">

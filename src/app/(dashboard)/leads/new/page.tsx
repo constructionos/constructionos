@@ -22,8 +22,14 @@ export default async function NewLeadPage({ searchParams }: NewLeadPageProps) {
     return (
       <div className="mx-auto max-w-3xl">
         <Card className="p-6">
-          <h1 className="text-2xl font-semibold">Empresa no disponible</h1>
-          <p className="mt-3 text-muted-foreground">No tienes acceso a esta empresa o tu usuario no tiene membership.</p>
+          <h1 className="text-2xl font-semibold">No tienes acceso a esta empresa o no existe.</h1>
+          <p className="mt-3 text-muted-foreground">No se puede crear una oportunidad fuera de una empresa asociada a tu usuario.</p>
+          <Link
+            className="mt-5 inline-flex h-10 items-center justify-center rounded-md border border-border bg-card px-4 text-sm font-medium transition hover:bg-muted"
+            href="/dashboard"
+          >
+            Volver a mi panel
+          </Link>
         </Card>
       </div>
     );
@@ -35,14 +41,14 @@ export default async function NewLeadPage({ searchParams }: NewLeadPageProps) {
     <div className="mx-auto max-w-5xl space-y-6">
       <Link className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground" href={companyHref("/leads", activeCompany.slug)}>
         <ArrowLeft aria-hidden="true" size={16} />
-        Volver a leads
+        Volver a oportunidades
       </Link>
 
       <CompanySwitcher activeCompany={activeCompany} companies={companies} currentPath="/leads/new" />
 
       <div>
         <Badge tone="green">Entrada manual</Badge>
-        <h1 className="mt-3 text-3xl font-semibold tracking-normal">Nuevo lead</h1>
+        <h1 className="mt-3 text-3xl font-semibold tracking-normal">Nueva oportunidad</h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">
           Registra una oportunidad que ha entrado por WhatsApp, llamada, referido o campana.
         </p>

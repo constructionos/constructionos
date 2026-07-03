@@ -46,7 +46,7 @@ export default async function LeadDetailPage({ params, searchParams }: LeadDetai
     <div className="mx-auto max-w-5xl space-y-6">
       <Link className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground" href={companyHref("/leads", activeCompany.slug)}>
         <ArrowLeft aria-hidden="true" size={16} />
-        Volver a leads
+        Volver a oportunidades
       </Link>
 
       <CompanySwitcher activeCompany={activeCompany} companies={companies} currentPath="/leads" />
@@ -61,7 +61,7 @@ export default async function LeadDetailPage({ params, searchParams }: LeadDetai
       </div>
 
       <section className="space-y-3">
-        <h2 className="font-semibold">Resumen del lead</h2>
+        <h2 className="font-semibold">Resumen de la oportunidad</h2>
         <div className="grid gap-4 md:grid-cols-5">
           <Card className="p-5">
             <p className="text-sm text-muted-foreground">Valor estimado</p>
@@ -128,7 +128,7 @@ export default async function LeadDetailPage({ params, searchParams }: LeadDetai
         <Card className="p-5">
           <h2 className="font-semibold">Gestion de oportunidad</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Actualiza el estado comercial, prioridad y siguiente paso sin cambiar los datos captados del cliente.
+            Actualiza el estado comercial, prioridad y siguiente tarea sin cambiar los datos captados del cliente.
           </p>
           <div className="mt-5">
             <LeadWorkflowForm lead={lead} />

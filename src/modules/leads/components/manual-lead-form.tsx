@@ -39,7 +39,7 @@ function SubmitButton() {
   return (
     <Button disabled={pending} type="submit">
       <Plus aria-hidden="true" size={16} />
-      {pending ? "Creando" : "Crear lead"}
+      {pending ? "Creando" : "Crear oportunidad"}
     </Button>
   );
 }

@@ -191,8 +191,17 @@ export async function POST(request: NextRequest) {
       p_title: values.title,
     });
 
-    if (error || !data) {
+    if (error) {
       console.error("Public lead API failed", error);
+      if (isPublicIntakeUnavailableError(error)) {
+        return jsonResponse({ error: "La captación no está disponible.", ok: false }, 404, corsHeaders);
+      }
+
+      return jsonResponse({ error: "No hemos podido registrar la solicitud.", ok: false }, 500, corsHeaders);
+    }
+
+    if (!data) {
+      console.error("Public lead API did not return a lead id");
       return jsonResponse({ error: "No hemos podido registrar la solicitud.", ok: false }, 500, corsHeaders);
     }
 
@@ -244,6 +253,10 @@ function isOriginAllowed(origin: string | null) {
   if (!origin) return true;
 
   return ALLOWED_ORIGINS.includes(origin as (typeof ALLOWED_ORIGINS)[number]) || ALLOWED_ORIGIN_PATTERNS.some((pattern) => pattern.test(origin));
+}
+
+function isPublicIntakeUnavailableError(error: { code?: string; message?: string }) {
+  return error.code === "23503" || error.message?.includes("Public intake not available");
 }
 
 function jsonResponse(body: unknown, status: number, headers: Headers) {

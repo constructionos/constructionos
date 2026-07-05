@@ -70,6 +70,8 @@ await fetch("https://constructionos-constructionos.vercel.app/api/public/leads",
 
 Exito:
 
+`HTTP 201 Created`
+
 ```json
 {
   "ok": true,

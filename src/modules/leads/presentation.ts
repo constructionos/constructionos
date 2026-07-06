@@ -1,7 +1,21 @@
-import { formatCurrency } from "@/lib/utils/format";
-import { leadServiceTypeLabels, type Lead } from "./types";
+import { formatCurrency, formatDate } from "@/lib/utils/format";
+import { leadServiceTypeLabels, type Lead, type LeadStatus } from "./types";
 
 const undefinedLocationValues = new Set(["", "por definir"]);
+const followUpWarningDays = 7;
+
+const activeLeadStatuses = new Set<LeadStatus>([
+  "new",
+  "pending_call",
+  "visit_pending",
+  "visit_done",
+  "budget_preparing",
+  "budget_sent",
+  "negotiation",
+]);
+const closedLeadStatuses = new Set<LeadStatus>(["won", "lost", "discarded"]);
+const budgetLeadStatuses = new Set<LeadStatus>(["budget_preparing", "budget_sent", "negotiation"]);
+const contactActionPattern = /contactar|llamar/i;
 
 const captureContextPatterns = {
   landingVersion: /^Landing version:\s*(.+)$/i,
@@ -16,8 +30,101 @@ export type CaptureContextItem = {
   value: string;
 };
 
+export type LeadFollowUpSignal = "overdue" | "today" | "missing_next_action" | "stale";
+
+export type LeadFollowUpStats = {
+  missingNextAction: number;
+  overdueFollowUps: number;
+  staleLeads: number;
+  todayFollowUps: number;
+};
+
+export const leadFollowUpSignalLabels: Record<LeadFollowUpSignal, string> = {
+  missing_next_action: "Sin próxima acción",
+  overdue: "Vencida",
+  stale: "Parada",
+  today: "Hoy",
+};
+
+export const leadFollowUpSignalTones: Record<LeadFollowUpSignal, "neutral" | "amber" | "blue" | "red"> = {
+  missing_next_action: "neutral",
+  overdue: "red",
+  stale: "blue",
+  today: "amber",
+};
+
 export function formatEstimatedBudget(value: number) {
   return Number.isFinite(value) && value > 0 ? formatCurrency(value) : "Sin estimar";
+}
+
+export function formatNextAction(value: string) {
+  return value.trim() || "Sin próxima acción";
+}
+
+export function formatNextActionDate(value: string) {
+  return parseDate(value) ? formatDate(value) : "Sin fecha";
+}
+
+export function getLeadFollowUpStats(leads: Lead[], now = new Date()): LeadFollowUpStats {
+  const signals = leads.map((lead) => getLeadFollowUpSignals(lead, now));
+
+  return {
+    missingNextAction: signals.filter((signal) => signal.missing_next_action).length,
+    overdueFollowUps: signals.filter((signal) => signal.overdue).length,
+    staleLeads: signals.filter((signal) => signal.stale).length,
+    todayFollowUps: signals.filter((signal) => signal.today).length,
+  };
+}
+
+export function getLeadFollowUpSignals(lead: Lead, now = new Date()) {
+  const emptySignals = {
+    missing_next_action: false,
+    overdue: false,
+    stale: false,
+    today: false,
+  };
+
+  if (!isActiveLead(lead)) {
+    return emptySignals;
+  }
+
+  const nextActionDate = parseDate(lead.next_action_date);
+  const updatedAt = parseDate(lead.updated_at);
+  const today = startOfLocalDay(now);
+
+  return {
+    missing_next_action: !lead.next_action.trim(),
+    overdue: nextActionDate ? startOfLocalDay(nextActionDate).getTime() < today.getTime() : false,
+    stale: updatedAt ? startOfLocalDay(updatedAt).getTime() < addDays(today, -followUpWarningDays).getTime() : false,
+    today: nextActionDate ? startOfLocalDay(nextActionDate).getTime() === today.getTime() : false,
+  };
+}
+
+export function getPrimaryLeadFollowUpSignal(lead: Lead, now = new Date()): LeadFollowUpSignal | null {
+  const signals = getLeadFollowUpSignals(lead, now);
+
+  if (signals.overdue) return "overdue";
+  if (signals.today) return "today";
+  if (signals.missing_next_action) return "missing_next_action";
+  if (signals.stale) return "stale";
+
+  return null;
+}
+
+export function isActiveLead(lead: Pick<Lead, "status">) {
+  return activeLeadStatuses.has(lead.status);
+}
+
+export function isClosedLead(lead: Pick<Lead, "status">) {
+  return closedLeadStatuses.has(lead.status);
+}
+
+export function isOpenBudgetLead(lead: Pick<Lead, "status">) {
+  return budgetLeadStatuses.has(lead.status);
+}
+
+export function isPendingContactLead(lead: Pick<Lead, "next_action" | "status">) {
+  return isActiveLead(lead) && (lead.status === "new" || lead.status === "pending_call" || contactActionPattern.test(lead.next_action));
 }
 
 export function formatLeadLocation(lead: Pick<Lead, "city" | "province" | "zone">) {
@@ -138,4 +245,24 @@ function formatSlugValue(value: string) {
     .trim()
     .replace(/\s+/g, " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function parseDate(value: string) {
+  if (!value.trim()) {
+    return null;
+  }
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function startOfLocalDay(value: Date) {
+  return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+}
+
+function addDays(value: Date, days: number) {
+  const date = new Date(value);
+  date.setDate(date.getDate() + days);
+  return date;
 }

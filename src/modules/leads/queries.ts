@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isActiveLead, isOpenBudgetLead, isPendingContactLead } from "./presentation";
 import {
   budgetRanges,
   desiredTimelines,
@@ -34,20 +35,9 @@ type LeadRow = {
   source: string;
   status: string;
   title: string;
+  updated_at: string;
   zone: string | null;
 };
-
-const activeLeadStatuses = new Set<LeadStatus>([
-  "new",
-  "pending_call",
-  "visit_pending",
-  "visit_done",
-  "budget_preparing",
-  "budget_sent",
-  "negotiation",
-]);
-const budgetLeadStatuses = new Set<LeadStatus>(["budget_preparing", "budget_sent", "negotiation"]);
-const contactActionPattern = /contactar|llamar/i;
 
 const leadSelect = `
   id,
@@ -68,7 +58,8 @@ const leadSelect = `
   email,
   phone,
   source,
-  created_at
+  created_at,
+  updated_at
 `;
 
 function createLeadStatusCounts() {
@@ -90,8 +81,8 @@ function mapLead(row: LeadRow): Lead {
     email: row.email ?? "",
     estimated_budget: Number(row.estimated_budget),
     id: row.id,
-    next_action: row.next_action ?? "Contactar lead",
-    next_action_date: row.next_action_date ?? row.created_at,
+    next_action: row.next_action ?? "",
+    next_action_date: row.next_action_date ?? "",
     phone: row.phone ?? "",
     priority: getEnumValue(leadPriorities, row.priority, "medium") as LeadPriority,
     province: row.province,
@@ -99,6 +90,7 @@ function mapLead(row: LeadRow): Lead {
     source: getEnumValue(leadSources, row.source, "web") as LeadSource,
     status: getEnumValue(leadStatuses, row.status, "new") as LeadStatus,
     title: row.title,
+    updated_at: row.updated_at,
     zone: row.zone ?? "Por definir",
   };
 }
@@ -162,7 +154,7 @@ export async function getLeadById(id: string, companyId: string) {
 export async function getLeadStats(companyId: string) {
   const leads = await getLeads(companyId);
   const pipelineValue = leads.reduce((total, lead) => total + lead.estimated_budget, 0);
-  const activeLeads = leads.filter((lead) => activeLeadStatuses.has(lead.status));
+  const activeLeads = leads.filter(isActiveLead);
   const byStatus = leads.reduce<Record<LeadStatus, number>>(
     (accumulator, lead) => {
       accumulator[lead.status] += 1;
@@ -174,10 +166,8 @@ export async function getLeadStats(companyId: string) {
   return {
     byStatus,
     newUnreviewed: byStatus.new,
-    openBudgets: leads.filter((lead) => budgetLeadStatuses.has(lead.status)).length,
-    pendingContact: activeLeads.filter(
-      (lead) => lead.status === "new" || lead.status === "pending_call" || contactActionPattern.test(lead.next_action),
-    ).length,
+    openBudgets: leads.filter(isOpenBudgetLead).length,
+    pendingContact: activeLeads.filter(isPendingContactLead).length,
     pipelineValue,
     totalLeads: leads.length,
     totalActive: activeLeads.length,

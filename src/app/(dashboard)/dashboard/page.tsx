@@ -5,6 +5,13 @@ import { Card } from "@/components/ui/card";
 import { CompanySwitcher } from "@/components/layout/company-switcher";
 import { getActiveCompany } from "@/modules/companies/queries";
 import { LeadStatusBadge } from "@/modules/leads/components/lead-status-badge";
+import {
+  formatNextAction,
+  getLeadFollowUpStats,
+  getPrimaryLeadFollowUpSignal,
+  leadFollowUpSignalLabels,
+  leadFollowUpSignalTones,
+} from "@/modules/leads/presentation";
 import { getLeads, getLeadStats } from "@/modules/leads/queries";
 import { leadStatusLabels, type LeadStatus } from "@/modules/leads/types";
 
@@ -40,6 +47,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const { activeCompany, companies } = companyContext;
   const [stats, leads] = await Promise.all([getLeadStats(activeCompany.id), getLeads(activeCompany.id)]);
   const recentLeads = leads.slice(0, 3);
+  const followUpStats = getLeadFollowUpStats(leads);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -98,6 +106,28 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </Card>
       </section>
 
+      <section className="space-y-3">
+        <h2 className="font-semibold">Seguimiento comercial</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="p-5">
+            <p className="text-sm text-muted-foreground">Vencidas</p>
+            <p className="mt-3 text-3xl font-semibold">{followUpStats.overdueFollowUps}</p>
+          </Card>
+          <Card className="p-5">
+            <p className="text-sm text-muted-foreground">Para hoy</p>
+            <p className="mt-3 text-3xl font-semibold">{followUpStats.todayFollowUps}</p>
+          </Card>
+          <Card className="p-5">
+            <p className="text-sm text-muted-foreground">Sin próxima acción</p>
+            <p className="mt-3 text-3xl font-semibold">{followUpStats.missingNextAction}</p>
+          </Card>
+          <Card className="p-5">
+            <p className="text-sm text-muted-foreground">Paradas +7 días</p>
+            <p className="mt-3 text-3xl font-semibold">{followUpStats.staleLeads}</p>
+          </Card>
+        </div>
+      </section>
+
       {!leads.length ? (
         <Card className="p-5">
           <h2 className="font-semibold">Siguiente paso recomendado</h2>
@@ -131,19 +161,28 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           </div>
           {recentLeads.length ? (
             <div className="space-y-3">
-              {recentLeads.map((lead) => (
-                <Link
-                  className="flex items-center justify-between rounded-md border border-border p-3 transition hover:bg-muted/70"
-                  href={companyHref(`/leads/${lead.id}`, activeCompany.slug)}
-                  key={lead.id}
-                >
-                  <div>
-                    <p className="font-medium">{lead.title}</p>
-                    <p className="text-sm text-muted-foreground">Siguiente tarea: {lead.next_action}</p>
-                  </div>
-                  <LeadStatusBadge status={lead.status} />
-                </Link>
-              ))}
+              {recentLeads.map((lead) => {
+                const followUpSignal = getPrimaryLeadFollowUpSignal(lead);
+
+                return (
+                  <Link
+                    className="flex items-center justify-between gap-3 rounded-md border border-border p-3 transition hover:bg-muted/70"
+                    href={companyHref(`/leads/${lead.id}`, activeCompany.slug)}
+                    key={lead.id}
+                  >
+                    <div>
+                      <p className="font-medium">{lead.title}</p>
+                      <p className="text-sm text-muted-foreground">Siguiente tarea: {formatNextAction(lead.next_action)}</p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {followUpSignal ? (
+                        <Badge tone={leadFollowUpSignalTones[followUpSignal]}>{leadFollowUpSignalLabels[followUpSignal]}</Badge>
+                      ) : null}
+                      <LeadStatusBadge status={lead.status} />
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           ) : (
             <div className="rounded-md border border-dashed border-border p-4">

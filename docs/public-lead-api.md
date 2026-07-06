@@ -97,7 +97,16 @@ El endpoint no usa wildcard. La allowlist esta definida en `src/app/api/public/l
 
 - produccion de ConstructionOS
 - produccion/preview de la landing Diego en Vercel
-- localhost para desarrollo
+- `http://localhost:8080`
+- `http://localhost:3000`
+- `http://localhost:5173`
+- `http://127.0.0.1:8080`
+- `http://127.0.0.1:3000`
+- `http://127.0.0.1:5173`
+
+Los origenes `localhost` y `127.0.0.1` estan permitidos solo para desarrollo y pruebas locales de landings. El endpoint no usa cookies, no usa credentials y no devuelve `Access-Control-Allow-Credentials`.
+
+La seguridad no depende de CORS: depende de validacion server-side, `companySlug` publico habilitado para intake y la RPC segura `create_public_lead_for_company`.
 
 ## Seguridad
 

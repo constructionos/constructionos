@@ -63,35 +63,35 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       <section className="grid gap-4 md:grid-cols-5">
         <Card className="p-5">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Oportunidades</span>
+            <span className="text-sm text-muted-foreground">Oportunidades activas</span>
             <Users aria-hidden="true" className="text-primary" size={18} />
           </div>
-          <p className="mt-4 text-3xl font-semibold">{stats.totalLeads}</p>
+          <p className="mt-4 text-3xl font-semibold">{stats.totalActive}</p>
         </Card>
         <Card className="p-5">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Nuevas</span>
+            <span className="text-sm text-muted-foreground">Nuevas sin revisar</span>
             <TrendingUp aria-hidden="true" className="text-primary" size={18} />
           </div>
-          <p className="mt-4 text-3xl font-semibold">{stats.newLeads}</p>
+          <p className="mt-4 text-3xl font-semibold">{stats.newUnreviewed}</p>
         </Card>
         <Card className="p-5">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Llamada o visita</span>
+            <span className="text-sm text-muted-foreground">Pendientes de contacto</span>
             <PhoneCall aria-hidden="true" className="text-primary" size={18} />
           </div>
-          <p className="mt-4 text-3xl font-semibold">{stats.pendingFollowUp}</p>
+          <p className="mt-4 text-3xl font-semibold">{stats.pendingContact}</p>
         </Card>
         <Card className="p-5">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Presupuestos</span>
+            <span className="text-sm text-muted-foreground">Presupuestos abiertos</span>
             <Send aria-hidden="true" className="text-primary" size={18} />
           </div>
-          <p className="mt-4 text-3xl font-semibold">{stats.budgetSent}</p>
+          <p className="mt-4 text-3xl font-semibold">{stats.openBudgets}</p>
         </Card>
         <Card className="p-5">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Ganados</span>
+            <span className="text-sm text-muted-foreground">Ganadas</span>
             <Trophy aria-hidden="true" className="text-primary" size={18} />
           </div>
           <p className="mt-4 text-3xl font-semibold">{stats.wonLeads}</p>
@@ -139,7 +139,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 >
                   <div>
                     <p className="font-medium">{lead.title}</p>
-                    <p className="text-sm text-muted-foreground">{lead.next_action}</p>
+                    <p className="text-sm text-muted-foreground">Siguiente tarea: {lead.next_action}</p>
                   </div>
                   <LeadStatusBadge status={lead.status} />
                 </Link>
@@ -170,7 +170,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   <div className="h-2 rounded-full bg-muted">
                     <div
                       className="h-2 rounded-full bg-primary"
-                      style={{ width: stats.totalLeads ? `${Math.max((count / stats.totalLeads) * 100, 6)}%` : "0%" }}
+                      style={{ width: stats.totalLeads && count > 0 ? `${(count / stats.totalLeads) * 100}%` : "0%" }}
                     />
                   </div>
                 </div>

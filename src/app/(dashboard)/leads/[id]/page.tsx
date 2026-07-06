@@ -8,7 +8,14 @@ import { formatDate } from "@/lib/utils/format";
 import { getActiveCompany } from "@/modules/companies/queries";
 import { LeadStatusBadge } from "@/modules/leads/components/lead-status-badge";
 import { LeadWorkflowForm } from "@/modules/leads/components/lead-workflow-form";
-import { formatEstimatedBudget, formatLeadLocation, getDeclaredServiceLabel, parseLeadDescription } from "@/modules/leads/presentation";
+import {
+  formatEstimatedBudget,
+  formatLeadLocation,
+  formatNextAction,
+  formatNextActionDate,
+  getDeclaredServiceLabel,
+  parseLeadDescription,
+} from "@/modules/leads/presentation";
 import { getLeadById } from "@/modules/leads/queries";
 import {
   budgetRangeLabels,
@@ -165,8 +172,8 @@ export default async function LeadDetailPage({ params, searchParams }: LeadDetai
           <div className="mt-4 flex items-start gap-3 rounded-md bg-muted p-4">
             <CalendarDays aria-hidden="true" className="mt-0.5 text-primary" size={18} />
             <div>
-              <p className="font-medium">{lead.next_action}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{formatDate(lead.next_action_date)}</p>
+              <p className="font-medium">{formatNextAction(lead.next_action)}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{formatNextActionDate(lead.next_action_date)}</p>
             </div>
           </div>
         </Card>

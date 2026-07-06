@@ -95,5 +95,6 @@ export type Lead = {
   source: LeadSource;
   status: LeadStatus;
   title: string;
+  updated_at: string;
   zone: string;
 };

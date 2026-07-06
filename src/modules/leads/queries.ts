@@ -37,7 +37,17 @@ type LeadRow = {
   zone: string | null;
 };
 
-const closedLeadStatuses = new Set<LeadStatus>(["discarded", "lost", "won"]);
+const activeLeadStatuses = new Set<LeadStatus>([
+  "new",
+  "pending_call",
+  "visit_pending",
+  "visit_done",
+  "budget_preparing",
+  "budget_sent",
+  "negotiation",
+]);
+const budgetLeadStatuses = new Set<LeadStatus>(["budget_preparing", "budget_sent", "negotiation"]);
+const contactActionPattern = /contactar|llamar/i;
 
 const leadSelect = `
   id,
@@ -152,6 +162,7 @@ export async function getLeadById(id: string, companyId: string) {
 export async function getLeadStats(companyId: string) {
   const leads = await getLeads(companyId);
   const pipelineValue = leads.reduce((total, lead) => total + lead.estimated_budget, 0);
+  const activeLeads = leads.filter((lead) => activeLeadStatuses.has(lead.status));
   const byStatus = leads.reduce<Record<LeadStatus, number>>(
     (accumulator, lead) => {
       accumulator[lead.status] += 1;
@@ -162,12 +173,14 @@ export async function getLeadStats(companyId: string) {
 
   return {
     byStatus,
-    budgetSent: byStatus.budget_sent,
-    newLeads: byStatus.new,
-    openLeads: leads.filter((lead) => !closedLeadStatuses.has(lead.status)).length,
-    pendingFollowUp: byStatus.pending_call + byStatus.visit_pending,
+    newUnreviewed: byStatus.new,
+    openBudgets: leads.filter((lead) => budgetLeadStatuses.has(lead.status)).length,
+    pendingContact: activeLeads.filter(
+      (lead) => lead.status === "new" || lead.status === "pending_call" || contactActionPattern.test(lead.next_action),
+    ).length,
     pipelineValue,
     totalLeads: leads.length,
+    totalActive: activeLeads.length,
     wonLeads: byStatus.won,
   };
 }

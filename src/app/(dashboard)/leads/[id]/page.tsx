@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { CompanySwitcher } from "@/components/layout/company-switcher";
 import { formatDate } from "@/lib/utils/format";
 import { getActiveCompany } from "@/modules/companies/queries";
+import { LeadQuickActions } from "@/modules/leads/components/lead-quick-actions";
 import { LeadStatusBadge } from "@/modules/leads/components/lead-status-badge";
 import { LeadWorkflowForm } from "@/modules/leads/components/lead-workflow-form";
 import {
@@ -156,6 +157,16 @@ export default async function LeadDetailPage({ params, searchParams }: LeadDetai
       ) : null}
 
       <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+        <Card className="p-5">
+          <h2 className="font-semibold">Acciones rápidas</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Avanza el seguimiento sin editar manualmente la fase, la tarea y la fecha.
+          </p>
+          <div className="mt-5">
+            <LeadQuickActions activeCompanySlug={activeCompany.slug} lead={lead} />
+          </div>
+        </Card>
+
         <Card className="p-5">
           <h2 className="font-semibold">Gestion de oportunidad</h2>
           <p className="mt-2 text-sm text-muted-foreground">

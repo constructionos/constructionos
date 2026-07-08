@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getActiveCompanyForUser } from "@/modules/companies/queries";
-import { budgetRanges, desiredTimelines, leadPriorities, leadServiceTypes, leadSources, leadStatuses } from "./types";
+import { getQuickActionPatch, leadQuickActionIds } from "./quick-actions";
+import { budgetRanges, desiredTimelines, leadPriorities, leadServiceTypes, leadSources, leadStatuses, type LeadStatus } from "./types";
 
 const leadCaptureSchema = z.object({
   budget_range: z.enum(budgetRanges),
@@ -112,6 +113,19 @@ const optionalDateSchema = z.preprocess(
   },
   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Indica una fecha valida.").optional(),
 );
+
+const leadQuickActionSchema = z.object({
+  action_date: optionalDateSchema,
+  action_id: z.enum(leadQuickActionIds),
+  company_slug: z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Empresa no valida."),
+  id: z.string().uuid("Lead no valido."),
+});
+
+export type LeadQuickActionState = {
+  fieldErrors?: Partial<Record<keyof z.infer<typeof leadQuickActionSchema>, string[]>>;
+  message?: string;
+  ok: boolean;
+};
 
 const optionalTextSchema = (maxLength: number) =>
   z.preprocess(
@@ -358,6 +372,122 @@ export async function updateLeadWorkflowAction(
 
   return {
     message: "Cambios guardados.",
+    ok: true,
+  };
+}
+
+export async function applyLeadQuickAction(
+  _previousState: LeadQuickActionState,
+  formData: FormData,
+): Promise<LeadQuickActionState> {
+  const parsed = leadQuickActionSchema.safeParse({
+    action_date: formData.get("action_date"),
+    action_id: formData.get("action_id"),
+    company_slug: formData.get("company_slug"),
+    id: formData.get("id"),
+  });
+
+  if (!parsed.success) {
+    return {
+      fieldErrors: parsed.error.flatten().fieldErrors,
+      message: "Revisa los campos marcados.",
+      ok: false,
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      message: "Inicia sesion para actualizar el lead.",
+      ok: false,
+    };
+  }
+
+  const companyContext = await getActiveCompanyForUser(supabase, user.id, parsed.data.company_slug);
+
+  if (!companyContext) {
+    return {
+      message: "Tu usuario no esta asociado a esta empresa.",
+      ok: false,
+    };
+  }
+
+  const { data: lead, error: leadError } = await supabase
+    .from("leads")
+    .select("id, status")
+    .eq("id", parsed.data.id)
+    .eq("company_id", companyContext.activeCompany.id)
+    .maybeSingle();
+
+  if (leadError) {
+    console.error("Failed to load lead for quick action", leadError);
+
+    return {
+      message: "No hemos podido aplicar la accion.",
+      ok: false,
+    };
+  }
+
+  const leadStatus = lead?.status && leadStatuses.includes(lead.status as LeadStatus) ? (lead.status as LeadStatus) : null;
+
+  if (!lead?.id || !leadStatus) {
+    return {
+      message: "No se ha encontrado el lead o no tienes acceso.",
+      ok: false,
+    };
+  }
+
+  const patch = getQuickActionPatch(parsed.data.action_id, { status: leadStatus }, parsed.data.action_date);
+
+  if (!patch) {
+    return {
+      message: "Esta accion no esta disponible para la fase actual.",
+      ok: false,
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("leads")
+    .update({
+      next_action: patch.next_action,
+      next_action_date: patch.next_action_date,
+      status: patch.status,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", parsed.data.id)
+    .eq("company_id", companyContext.activeCompany.id)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("Failed to apply lead quick action", error);
+
+    return {
+      message: "No hemos podido aplicar la accion.",
+      ok: false,
+    };
+  }
+
+  if (!data) {
+    return {
+      message: "No se ha encontrado el lead o no tienes acceso.",
+      ok: false,
+    };
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/leads");
+  revalidatePath(`/dashboard?company=${companyContext.activeCompany.slug}`);
+  revalidatePath(`/leads?company=${companyContext.activeCompany.slug}`);
+  revalidatePath(`/leads/${parsed.data.id}`);
+  revalidatePath(`/leads/${parsed.data.id}?company=${companyContext.activeCompany.slug}`);
+
+  return {
+    message: "Accion aplicada.",
     ok: true,
   };
 }
